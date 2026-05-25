@@ -43,18 +43,30 @@
     }
 
     .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      column-gap: 0.75rem;
-      row-gap: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
       padding: 2rem 2rem 3rem;
       max-width: 1200px;
       margin: 0 auto;
     }
 
+    .photo-row {
+      display: flex;
+      flex-direction: row;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .photo-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
     .photo-card {
       display: block;
-      overflow: hidden;
+      flex-shrink: 0;
     }
 
     .photo-card img {
@@ -68,15 +80,6 @@
     .photo-card img:hover {
       opacity: 0.95;
       transform: translateY(-2px);
-    }
-
-    .photo-card.fill-height {
-      height: 100%;
-    }
-
-    .photo-card.fill-height img {
-      height: 100%;
-      object-fit: cover;
     }
 
 
@@ -162,19 +165,20 @@
   </div>
 
   <script>
-    // col and row use CSS grid-column / grid-row shorthand (e.g. "1 / 6" = columns 1 through 6)
+    // width: exact percentage of the row. row: which flex row (integer). stack: true = stacked vertically with adjacent stacked photos.
+    // rowAlign: "flex-end" bottom-aligns all photos in that row. center: true centers a solo photo.
     const photoOrder = [
-      { file: "collection-1/ai_1-01.JPG",  position: 1,  category: "collection1", col: "1 / 6",  row: "1", alignSelf: "end" },
-      { file: "collection-1/ai_1-02.JPG",  position: 2,  category: "collection1", col: "6 / 13", row: "1" },
-      { file: "collection-1/ai_1-03.JPG",  position: 3,  category: "collection1", col: "3 / 11", row: "2" },
-      { file: "collection-1/ai_1-04.JPG",  position: 4,  category: "collection1", col: "3 / 11", row: "3" },
-      { file: "collection-1/ai_1-06.JPG",  position: 5,  category: "collection1", col: "1 / 8",  row: "4 / 6", fillHeight: true },
-      { file: "collection-1/ai_1-07.JPG",  position: 6,  category: "collection1", col: "8 / 13", row: "4" },
-      { file: "collection-1/ai_1-07z.JPG", position: 7,  category: "collection1", col: "8 / 13", row: "5" },
-      { file: "collection-1/ai_1-05.JPG",  position: 8,  category: "collection1", col: "2 / 12", row: "6" },
-      { file: "collection-1/ai_1-08.JPG",  position: 9,  category: "collection1", col: "2 / 12", row: "7" },
-      { file: "collection-1/ai_1-09.JPG",  position: 10, category: "collection1", col: "5 / 9",  row: "8" },
-      { file: "collection-1/ai_1-10.JPG",  position: 11, category: "collection1", col: "2 / 12", row: "9" },
+      { file: "collection-1/ai_1-01.JPG",  position: 1,  category: "collection1", row: 1, width: "37%", rowAlign: "flex-end" },
+      { file: "collection-1/ai_1-02.JPG",  position: 2,  category: "collection1", row: 1, width: "56%" },
+      { file: "collection-1/ai_1-03.JPG",  position: 3,  category: "collection1", row: 2, width: "66%", center: true },
+      { file: "collection-1/ai_1-04.JPG",  position: 4,  category: "collection1", row: 3, width: "66%", center: true },
+      { file: "collection-1/ai_1-06.JPG",  position: 5,  category: "collection1", row: 4, width: "56%" },
+      { file: "collection-1/ai_1-07.JPG",  position: 6,  category: "collection1", row: 4, width: "41%", stack: true },
+      { file: "collection-1/ai_1-07z.JPG", position: 7,  category: "collection1", row: 4, width: "41%", stack: true },
+      { file: "collection-1/ai_1-05.JPG",  position: 8,  category: "collection1", row: 5, width: "84%", center: true },
+      { file: "collection-1/ai_1-08.JPG",  position: 9,  category: "collection1", row: 6, width: "84%", center: true },
+      { file: "collection-1/ai_1-09.JPG",  position: 10, category: "collection1", row: 7, width: "30%", center: true },
+      { file: "collection-1/ai_1-10.JPG",  position: 11, category: "collection1", row: 8, width: "84%", center: true },
 
     ];
 
@@ -184,32 +188,54 @@
     const tabs = document.querySelectorAll('.tab-button');
     let activeCategory = 'collection1';
 
+    function makeCard(photo, widthOverride) {
+      const card = document.createElement('div');
+      card.className = 'photo-card';
+      card.style.width = widthOverride || photo.width || '100%';
+      const img = document.createElement('img');
+      img.src = `photos/${photo.file}`;
+      img.alt = photo.file;
+      img.addEventListener('click', () => { lbImg.src = img.src; lb.classList.add('open'); });
+      card.appendChild(img);
+      return card;
+    }
+
     function renderGallery() {
       gallery.innerHTML = '';
-      photoOrder
-        .filter(photo => photo.category === activeCategory)
-        .sort((a, b) => a.position - b.position)
-        .forEach(photo => {
-          const card = document.createElement('div');
-          card.className = 'photo-card';
+      const photos = photoOrder
+        .filter(p => p.category === activeCategory)
+        .sort((a, b) => a.position - b.position);
 
-          if (photo.col) card.style.gridColumn = photo.col;
-          if (photo.row) card.style.gridRow = photo.row;
-          if (photo.fillHeight) card.classList.add('fill-height');
-          if (photo.alignSelf) card.style.alignSelf = photo.alignSelf;
+      // Group by row number
+      const rowMap = {};
+      photos.forEach(p => { (rowMap[p.row] = rowMap[p.row] || []).push(p); });
 
-          const img = document.createElement('img');
-          img.src = `photos/${photo.file}`;
-          img.alt = photo.file;
+      Object.keys(rowMap).sort((a, b) => a - b).forEach(rowKey => {
+        const rowPhotos = rowMap[rowKey];
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'photo-row';
+        if (rowPhotos[0].rowAlign) rowDiv.style.alignItems = rowPhotos[0].rowAlign;
 
-          img.addEventListener('click', () => {
-            lbImg.src = img.src;
-            lb.classList.add('open');
-          });
-
-          card.appendChild(img);
-          gallery.appendChild(card);
+        let stackDiv = null;
+        rowPhotos.forEach(photo => {
+          if (photo.stack) {
+            if (!stackDiv) {
+              stackDiv = document.createElement('div');
+              stackDiv.className = 'photo-stack';
+              stackDiv.style.width = photo.width;
+              rowDiv.appendChild(stackDiv);
+            }
+            stackDiv.appendChild(makeCard(photo, '100%'));
+          } else {
+            stackDiv = null;
+            const card = makeCard(photo, photo.width);
+            if (photo.center) { card.style.marginLeft = 'auto'; card.style.marginRight = 'auto'; }
+            rowDiv.appendChild(card);
+          }
         });
+
+        gallery.appendChild(rowDiv);
+      });
     }
 
     const aboutSection = document.getElementById('about-section');
