@@ -120,6 +120,7 @@
 
     /* ── Edit mode ── */
     #edit-btn {
+      display: none;
       position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 400;
       padding: 0.45rem 0.9rem; background: #111; color: #fff;
       border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
@@ -275,6 +276,7 @@
     function makeCard(photo, widthOverride) {
       const card = document.createElement('div');
       card.className = 'photo-card';
+      card._photo = photo;
       card.style.width = widthOverride || photo.width || '100%';
       const img = document.createElement('img');
       img.src = `photos/${photo.file}`;
@@ -674,16 +676,33 @@
     document.querySelectorAll('.photo-section-free').forEach(sec => {
       const cw = sec.clientWidth, ch = sec.clientHeight;
       sec.querySelectorAll('.photo-card[data-editable]').forEach(card => {
-        const file = card.querySelector('img').src.split('/photos/')[1] || '?';
+        const p = card._photo || {};
         const x = pct(card.offsetLeft,  cw);
         const y = pct(card.offsetTop,   ch);
         const w = pct(card.offsetWidth, cw);
-        lines.push(`  x: "${x}", y: "${y}", width: "${w}",  // ${file}`);
+        // Rebuild the full entry, updating only x/y/width
+        const parts = [
+          `file: "${p.file || ''}"`,
+          `position: ${p.position ?? '?'}`,
+          `category: "${p.category || ''}"`,
+          `row: ${p.row ?? '?'}`,
+          `x: "${x}"`,
+          `y: "${y}"`,
+          `width: "${w}"`,
+        ];
+        if (p.sectionHeight) parts.push(`sectionHeight: "${p.sectionHeight}"`);
+        if (p.stack)         parts.push(`stack: true`);
+        if (p.center)        parts.push(`center: true`);
+        if (p.rowAlign)      parts.push(`rowAlign: "${p.rowAlign}"`);
+        lines.push(`      { ${parts.join(', ')} },`);
       });
     });
     copyTA.value = lines.join('\n');
     copyModal.classList.add('open');
   }
+
+  // Show edit button only when ?edit is in the URL
+  if (location.search.includes('edit')) document.getElementById('edit-btn').style.display = 'block';
 
   // ── Util ────────────────────────────────────────────────────────────────────
   function pct(px, total) { return (px / total * 100).toFixed(1) + '%'; }
