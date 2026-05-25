@@ -235,7 +235,7 @@
   </div>
 
   <div class="about-section" id="about-section">
-    <p style="text-align:left; max-width:600px; margin-left:auto; margin-right:auto;">If possible, how might one visualize consciousness? Sentience? Stream of consciousness? How do different audiences perceive the same set of photographs? What feelings might they invoke? Is consciousness an important part of visual art?<br><br>Photography is one of my biggest hobbies, however, I usually photograph nature and street scenes with the goal of visual aesthetic and creativity. I haven’t tried creating any collections that are meant to invoke specific feelings or portray ideas, nor have I ever created a collection of interconnected photos in general. I’m excited to expand my horizons as a photographer and learn about both consciousness and the art of photography along the way.
+    <p style="text-align:left; max-width:600px; margin-left:auto; margin-right:auto;">Go on a mental walk. Consider the following:<br><br>If possible, how might one visualize consciousness? Sentience? Stream(s) of consciousness? How do different audiences perceive the same surroundings? What feelings might they invoke? Is consciousness an important part of visual art?<br><br>Photography is one of my biggest hobbies, however, I usually like to photograph nature and street scenes with the goal of visual aesthetic and creativity. I haven’t tried creating any collections that are meant to invoke specific feelings or portray ideas, nor have I ever created a collection of interconnected photos in general. I’m excited to expand broaden my reach on photography and learn about both consciousness and the art of photography.
 </p>
   </div>
 
@@ -396,7 +396,8 @@
     });
 
     function fitGalleryToContent() {
-      gallery.style.minHeight = '';
+      gallery.style.height = '';
+      gallery.style.overflow = '';
       const imgs = Array.from(gallery.querySelectorAll('img'));
       const pending = imgs.filter(img => !img.complete)
         .map(img => new Promise(res => { img.onload = img.onerror = res; }));
@@ -408,7 +409,8 @@
           maxBottom = Math.max(maxBottom, rect.bottom - galleryRect.top);
         });
         const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
-        gallery.style.minHeight = (maxBottom + 4 * remPx) + 'px';
+        gallery.style.height = (maxBottom + 4 * remPx) + 'px';
+        gallery.style.overflow = 'hidden';
       });
     }
 
