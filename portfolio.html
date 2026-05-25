@@ -14,7 +14,8 @@
     }
 
     header { position: absolute; top: 1rem; right: 2rem; text-align: right; }
-    header h1 { font-size: 2.5rem; letter-spacing: 0.1em; margin: 0; }
+    header h1 { font-size: 2.5rem; margin: 0; }
+    header h1 span { display: inline-block; letter-spacing: 0.1em; margin-right: -0.1em; }
     header p  { color: #aaa; margin: 0.5rem 0 0 0; }
 
     .tabs {
@@ -76,15 +77,6 @@
       min-width: 0;
     }
 
-    .photo-caption {
-      width: 140px;
-      flex-shrink: 0;
-      color: #aaa;
-      font-size: 0.85rem;
-      line-height: 1.5;
-      padding-top: 0.25rem;
-      white-space: pre-line;
-    }
 
     .about-section {
       display: none;
@@ -153,8 +145,8 @@
       <button class="tab-button" data-category="radii">radii</button>
     </div>
     <header>
-      <h1 id="about-toggle">tiffany sun</h1>
-      <p><a href="https://github.com/tsun48/ENG534-project" target="_blank">eng534_final-project </a></p>
+      <h1 id="about-toggle"><span>tiffany sun</span></h1>
+      <p><a href="https://github.com/tsun48/ENG534-project" target="_blank">eng534_final-project</a></p>
     </header>
   </div>
 
@@ -175,17 +167,17 @@
   <script>
     // Edit the position numbers here to rearrange photos inside each category
     const photoOrder = [
-      { file: "geo_6.jpg", position: 1, category: "geometry", caption: "2025.08.16\nTERMINAL//CHICAGO\nvanishing point" },
-      { file: "geo_4.jpg", position: 2, category: "geometry", caption: "2025.07.05\nSKYSCRAPER//CHICAGO\nthirds triangle" },
-      { file: "geo_1.jpg", position: 3, category: "geometry", caption: "2026.03.11\nPAVILLION//COLARES\ntrapezoids" },
-      { file: "geo_3.jpg", position: 4, category: "geometry", caption: "2026.03.11\nPAVILLION2//COLARES\ntrapezoids" },
-      { file: "geo_5.jpg", position: 5, category: "geometry", caption: "2025.10.05\nCONTRAIL//NASHUA\norigin" },
-      { file: "geo_2.jpg", position: 6, category: "geometry", caption: "2026.03.11\nBALUSTRADE//COLARES\ntritangram" },
+      { file: "geo_6.jpg", position: 1, category: "geometry" },
+      { file: "geo_4.jpg", position: 2, category: "geometry" },
+      { file: "geo_1.jpg", position: 3, category: "geometry" },
+      { file: "geo_3.jpg", position: 4, category: "geometry" },
+      { file: "geo_5.jpg", position: 5, category: "geometry" },
+      { file: "geo_2.jpg", position: 6, category: "geometry" },
 
-      { file: "dest_3.jpg", position: 1, category: "destinations", caption: "2025.07.05\nALLERTON_HOTEL//CHICAGO" },
-      { file: "dest_4.jpg", position: 2, category: "destinations", caption: "2025.07.05\nLAKE_POINT_TOWER//CHICAGO" },
-      { file: "dest_2.jpg", position: 3, category: "destinations", caption: "2025.06.11\nWASHINGTON_ST.//BOSTON" },
-      { file: "dest_5.jpg", position: 4, category: "destinations", caption: "2025.07.05\nSUPERIOR_ST.//CHICAGO" },
+      { file: "dest_3.jpg", position: 1, category: "destinations", },
+      { file: "dest_4.jpg", position: 2, category: "destinations", },
+      { file: "dest_2.jpg", position: 3, category: "destinations" },
+      { file: "dest_5.jpg", position: 4, category: "destinations" },
 
       { file: "frames_1.jpg", position: 1, category: "frames" },
       { file: "frames_2.jpg", position: 2, category: "frames" },
