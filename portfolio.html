@@ -45,8 +45,9 @@
     .grid {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
-      gap: 1rem;
-      padding: 2rem 1rem 3rem;
+      column-gap: 0.75rem;
+      row-gap: 2rem;
+      padding: 2rem 2rem 3rem;
       max-width: 1200px;
       margin: 0 auto;
     }
@@ -163,7 +164,7 @@
   <script>
     // col and row use CSS grid-column / grid-row shorthand (e.g. "1 / 6" = columns 1 through 6)
     const photoOrder = [
-      { file: "collection-1/ai_1-01.JPG",  position: 1,  category: "collection1", col: "1 / 6",  row: "1" },
+      { file: "collection-1/ai_1-01.JPG",  position: 1,  category: "collection1", col: "1 / 6",  row: "1", alignSelf: "end" },
       { file: "collection-1/ai_1-02.JPG",  position: 2,  category: "collection1", col: "6 / 13", row: "1" },
       { file: "collection-1/ai_1-03.JPG",  position: 3,  category: "collection1", col: "3 / 11", row: "2" },
       { file: "collection-1/ai_1-04.JPG",  position: 4,  category: "collection1", col: "3 / 11", row: "3" },
@@ -195,6 +196,7 @@
           if (photo.col) card.style.gridColumn = photo.col;
           if (photo.row) card.style.gridRow = photo.row;
           if (photo.fillHeight) card.classList.add('fill-height');
+          if (photo.alignSelf) card.style.alignSelf = photo.alignSelf;
 
           const img = document.createElement('img');
           img.src = `photos/${photo.file}`;
