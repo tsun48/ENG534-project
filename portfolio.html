@@ -64,6 +64,15 @@
       gap: 0.75rem;
     }
 
+    .photo-section-free {
+      position: relative;
+      width: 100%;
+    }
+
+    .photo-section-free .photo-card {
+      position: absolute;
+    }
+
     .photo-card {
       display: block;
       flex-shrink: 0;
@@ -165,11 +174,12 @@
   </div>
 
   <script>
-    // width: exact percentage of the row. row: which flex row (integer). stack: true = stacked vertically with adjacent stacked photos.
-    // rowAlign: "flex-end" bottom-aligns all photos in that row. center: true centers a solo photo.
+    // Flex rows: width, row, stack, center, rowAlign as before.
+    // Free-placement rows: set sectionHeight on first photo of a row (% of container width = container height).
+    //   Each photo then needs x (left %), y (top % of section height), width.
     const photoOrder = [
-      { file: "collection-1/ai_1-01.JPG",  position: 1,  category: "collection1", row: 1, width: "37%", rowAlign: "flex-end" },
-      { file: "collection-1/ai_1-02.JPG",  position: 2,  category: "collection1", row: 1, width: "56%" },
+      { file: "collection-1/ai_1-01.JPG",  position: 1,  category: "collection1", row: 1, x: "2%",  y: "5%",  width: "37%", sectionHeight: "65%" },
+      { file: "collection-1/ai_1-02.JPG",  position: 2,  category: "collection1", row: 1, x: "43%", y: "28%", width: "55%" },
       { file: "collection-1/ai_1-03.JPG",  position: 3,  category: "collection1", row: 2, width: "66%", center: true },
       { file: "collection-1/ai_1-04.JPG",  position: 4,  category: "collection1", row: 3, width: "66%", center: true },
       { file: "collection-1/ai_1-06.JPG",  position: 5,  category: "collection1", row: 4, width: "56%" },
@@ -212,6 +222,24 @@
 
       Object.keys(rowMap).sort((a, b) => a - b).forEach(rowKey => {
         const rowPhotos = rowMap[rowKey];
+
+        if (rowPhotos[0].sectionHeight) {
+          // Free-placement: photos positioned absolutely within a defined-height container.
+          // x/y are % of container width/height. Adjust sectionHeight to fit all photos.
+          const section = document.createElement('div');
+          section.className = 'photo-section-free';
+          section.style.paddingBottom = rowPhotos[0].sectionHeight;
+          rowPhotos.forEach(photo => {
+            const card = makeCard(photo, photo.width);
+            card.style.left = photo.x || '0%';
+            card.style.top  = photo.y || '0%';
+            section.appendChild(card);
+          });
+          gallery.appendChild(section);
+          return;
+        }
+
+        // Flex row
         const rowDiv = document.createElement('div');
         rowDiv.className = 'photo-row';
         if (rowPhotos[0].rowAlign) rowDiv.style.alignItems = rowPhotos[0].rowAlign;
