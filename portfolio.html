@@ -253,18 +253,29 @@
     // Free-placement rows: set sectionHeight on first photo of a row (% of container width = container height).
     //   Each photo then needs x (left %), y (top % of section height), width.
     const photoOrder = [
-      { file: "collection-1/ai_1-01.JPG",  position: 1,  category: "collection1", row: 1, x: "0.0%", y: "41.5%", width: "47.7%", sectionHeight: "65%" },
-      { file: "collection-1/ai_1-02.JPG",  position: 2,  category: "collection1", row: 1, x: "52.3%", y: "14.0%", width: "47.7%" },
-      { file: "collection-1/ai_1-03.JPG",  position: 3,  category: "collection1", row: 2, width: "66%", center: true },
-      { file: "collection-1/ai_1-04.JPG",  position: 4,  category: "collection1", row: 3, width: "66%", center: true },
-      { file: "collection-1/ai_1-06.JPG",  position: 5,  category: "collection1", row: 4, width: "56%" },
-      { file: "collection-1/ai_1-07.JPG",  position: 6,  category: "collection1", row: 4, width: "41%", stack: true },
-      { file: "collection-1/ai_1-07z.JPG", position: 7,  category: "collection1", row: 4, width: "41%", stack: true },
-      { file: "collection-1/ai_1-05.JPG",  position: 8,  category: "collection1", row: 5, width: "84%", center: true },
-      { file: "collection-1/ai_1-08.JPG",  position: 9,  category: "collection1", row: 6, width: "84%", center: true },
-      { file: "collection-1/ai_1-09.JPG",  position: 10, category: "collection1", row: 7, width: "30%", center: true },
-      { file: "collection-1/ai_1-10.JPG",  position: 11, category: "collection1", row: 8, width: "84%", center: true },
-
+      // { file: "collection-1/ai_1-01.JPG",  position: 1,  category: "collection1", row: 1, x: "0.0%", y: "41.5%", width: "47.7%", sectionHeight: "65%" },
+      // { file: "collection-1/ai_1-02.JPG",  position: 2,  category: "collection1", row: 1, x: "52.3%", y: "14.0%", width: "47.7%" },
+      // { file: "collection-1/ai_1-03.JPG",  position: 3,  category: "collection1", row: 2, width: "66%", center: true },
+      // { file: "collection-1/ai_1-04.JPG",  position: 4,  category: "collection1", row: 3, width: "66%", center: true },
+      // { file: "collection-1/ai_1-06.JPG",  position: 5,  category: "collection1", row: 4, width: "56%" },
+      // { file: "collection-1/ai_1-07.JPG",  position: 6,  category: "collection1", row: 4, width: "41%", stack: true },
+      // { file: "collection-1/ai_1-07z.JPG", position: 7,  category: "collection1", row: 4, width: "41%", stack: true },
+      // { file: "collection-1/ai_1-05.JPG",  position: 8,  category: "collection1", row: 5, width: "84%", center: true },
+      // { file: "collection-1/ai_1-08.JPG",  position: 9,  category: "collection1", row: 6, width: "84%", center: true },
+      // { file: "collection-1/ai_1-09.JPG",  position: 10, category: "collection1", row: 7, width: "30%", center: true },
+      // { file: "collection-1/ai_1-10.JPG",  position: 11, category: "collection1", row: 8, width: "84%", center: true },
+      { file: "collection-1/ai_1-01.JPG", position: 1, category: "collection1", row: 1, x: "0.0%", y: "41.5%", width: "47.7%", sectionHeight: "65.0%" },
+      { file: "collection-1/ai_1-02.JPG", position: 2, category: "collection1", row: 1, x: "52.3%", y: "14.0%", width: "47.7%" },
+      { file: "collection-1/ai_1-03.JPG", position: 3, category: "collection1", row: 2, x: "15.4%", y: "-4.8%", width: "69.1%", sectionHeight: "49.5%" },
+      { file: "collection-1/ai_1-04.JPG", position: 4, category: "collection1", row: 3, x: "28.3%", y: "-2.3%", width: "69.1%", sectionHeight: "49.5%" },
+      { file: "collection-1/ai_1-06.JPG", position: 5, category: "collection1", row: 4, x: "-2.6%", y: "20.0%", width: "65.2%", sectionHeight: "62.6%" },
+      { file: "collection-1/ai_1-07.JPG", position: 6, category: "collection1", row: 4, x: "66.5%", y: "1.4%", width: "36.9%" },
+      { file: "collection-1/ai_1-07z.JPG", position: 7, category: "collection1", row: 4, x: "66.5%", y: "50.1%", width: "36.9%" },
+      { file: "collection-1/ai_1-05.JPG", position: 8, category: "collection1", row: 5, x: "12.4%", y: "-1.7%", width: "84.0%", sectionHeight: "63.0%" },
+      { file: "collection-1/ai_1-08.JPG", position: 9, category: "collection1", row: 6, x: "8.0%", y: "1.5%", width: "84.0%", sectionHeight: "63.0%" },
+      { file: "collection-1/ai_1-09.JPG", position: 10, category: "collection1", row: 7, x: "35.0%", y: "2.2%", width: "30.0%", sectionHeight: "40.0%" },
+      { file: "collection-1/ai_1-10.JPG", position: 11, category: "collection1", row: 8, x: "13.8%", y: "1.3%", width: "72.4%", sectionHeight: "63.0%" },
+    
     ];
 
     const gallery = document.getElementById('gallery');
