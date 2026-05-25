@@ -118,6 +118,80 @@
 
     header a:hover { opacity: 0.7; }
 
+    /* ── Edit mode ── */
+    #edit-btn {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 400;
+      padding: 0.45rem 0.9rem; background: #111; color: #fff;
+      border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+      letter-spacing: 0.05em;
+    }
+    #edit-btn:hover { background: #333; }
+    #edit-btn.active { background: #4285f4; }
+
+    #edit-toolbar {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 400;
+      background: #1a1a1a; color: #fff; padding: 0.5rem 1rem;
+      align-items: center; gap: 0.5rem; flex-wrap: wrap;
+      font-size: 0.78rem; box-shadow: 0 -2px 12px rgba(0,0,0,0.4);
+    }
+    #edit-toolbar.visible { display: flex; }
+    .tb-btn {
+      padding: 0.3rem 0.65rem; border: 1px solid #555; background: #2a2a2a;
+      color: #ccc; border-radius: 4px; cursor: pointer; font-size: 0.75rem;
+    }
+    .tb-btn:hover { background: #3a3a3a; color: #fff; }
+    .tb-btn.on { background: #4285f4; border-color: #4285f4; color: #fff; }
+    .tb-sep { width: 1px; height: 1.4rem; background: #444; flex-shrink: 0; }
+    #val-display { font-family: monospace; color: #aaa; min-width: 200px; font-size: 0.75rem; }
+
+    .resize-handle {
+      position: absolute; width: 8px; height: 8px;
+      background: #fff; border: 1.5px solid #4285f4;
+      border-radius: 1px; z-index: 25; box-sizing: border-box;
+    }
+    .resize-handle[data-pos="nw"] { top:-4px; left:-4px; cursor:nw-resize; }
+    .resize-handle[data-pos="n"]  { top:-4px; left:calc(50% - 4px); cursor:n-resize; }
+    .resize-handle[data-pos="ne"] { top:-4px; right:-4px; cursor:ne-resize; }
+    .resize-handle[data-pos="e"]  { top:calc(50% - 4px); right:-4px; cursor:e-resize; }
+    .resize-handle[data-pos="se"] { bottom:-4px; right:-4px; cursor:se-resize; }
+    .resize-handle[data-pos="s"]  { bottom:-4px; left:calc(50% - 4px); cursor:s-resize; }
+    .resize-handle[data-pos="sw"] { bottom:-4px; left:-4px; cursor:sw-resize; }
+    .resize-handle[data-pos="w"]  { top:calc(50% - 4px); left:-4px; cursor:w-resize; }
+
+    .ed-selected { outline: 2px solid #4285f4; outline-offset: 1px; z-index: 15 !important; }
+    [data-editable] { cursor: move !important; }
+
+    .snap-guide {
+      position: absolute; pointer-events: none; z-index: 30;
+      background: #4285f4;
+    }
+    .snap-guide.h { left:0; right:0; height:1px; }
+    .snap-guide.v { top:0; bottom:0; width:1px; }
+
+    .grid-overlay {
+      position: absolute; inset:0; pointer-events:none; z-index:5; display:none;
+    }
+
+    #copy-modal {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:600;
+      align-items:center; justify-content:center;
+    }
+    #copy-modal.open { display:flex; }
+    #copy-modal-box {
+      background:#fff; padding:1.5rem; border-radius:8px; max-width:600px; width:90%;
+    }
+    #copy-modal-box h3 { margin-bottom:0.75rem; font-size:0.95rem; }
+    #copy-modal-box textarea {
+      width:100%; height:180px; font-family:monospace; font-size:0.75rem;
+      border:1px solid #ddd; padding:0.5rem; resize:vertical; border-radius:4px;
+    }
+    #copy-modal-box .modal-btns { display:flex; gap:0.5rem; margin-top:0.75rem; justify-content:flex-end; }
+    #copy-modal-box .modal-btns button {
+      padding:0.35rem 0.8rem; border:1px solid #ccc; border-radius:4px;
+      cursor:pointer; font-size:0.8rem; background:#f5f5f5;
+    }
+    #copy-modal-box .modal-btns button.primary { background:#4285f4; color:#fff; border-color:#4285f4; }
+
     /* Lightbox */
     #lightbox {
       display: none; position: fixed; inset: 0;
@@ -294,6 +368,325 @@
     lb.addEventListener('click', e => {
       if (e.target === lb) lb.classList.remove('open');
     });
+  </script>
+
+  <button id="edit-btn">Edit Layout</button>
+
+  <div id="edit-toolbar">
+    <button class="tb-btn" id="tb-grid">Grid</button>
+    <button class="tb-btn on" id="tb-snap">Snap</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="tb-ch" title="Center horizontally">Center H</button>
+    <button class="tb-btn" id="tb-cv" title="Center vertically">Center V</button>
+    <div class="tb-sep"></div>
+    <span id="val-display">click a photo to select</span>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="tb-copy">Copy Values</button>
+    <button class="tb-btn" id="tb-done" style="margin-left:auto;">Done</button>
+  </div>
+
+  <div id="copy-modal">
+    <div id="copy-modal-box">
+      <h3>Updated photo positions — paste into photoOrder</h3>
+      <textarea id="copy-textarea" readonly></textarea>
+      <div class="modal-btns">
+        <button id="copy-select-all">Select All</button>
+        <button class="primary" id="copy-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ── Editor ──────────────────────────────────────────────────────────────────
+  const SNAP_PX   = 8;   // snap threshold in pixels
+  const GRID_COLS = 10;  // grid divisions
+
+  let edActive   = false;
+  let gridOn     = false;
+  let snapOn     = true;
+  let selCard    = null;
+  let drag       = null;
+
+  const editBtn  = document.getElementById('edit-btn');
+  const toolbar  = document.getElementById('edit-toolbar');
+  const tbGrid   = document.getElementById('tb-grid');
+  const tbSnap   = document.getElementById('tb-snap');
+  const tbCH     = document.getElementById('tb-ch');
+  const tbCV     = document.getElementById('tb-cv');
+  const tbCopy   = document.getElementById('tb-copy');
+  const tbDone   = document.getElementById('tb-done');
+  const valDisp  = document.getElementById('val-display');
+  const copyModal = document.getElementById('copy-modal');
+  const copyTA   = document.getElementById('copy-textarea');
+
+  editBtn.addEventListener('click', () => toggleEditor(true));
+  tbDone.addEventListener('click', () => toggleEditor(false));
+  tbGrid.addEventListener('click', () => { gridOn = !gridOn; tbGrid.classList.toggle('on', gridOn); refreshGrids(); });
+  tbSnap.addEventListener('click', () => { snapOn = !snapOn; tbSnap.classList.toggle('on', snapOn); });
+  tbCH.addEventListener('click', centerH);
+  tbCV.addEventListener('click', centerV);
+  tbCopy.addEventListener('click', showCopyModal);
+  document.getElementById('copy-close').addEventListener('click', () => copyModal.classList.remove('open'));
+  document.getElementById('copy-select-all').addEventListener('click', () => { copyTA.select(); });
+
+  function toggleEditor(on) {
+    edActive = on;
+    editBtn.classList.toggle('active', on);
+    toolbar.classList.toggle('visible', on);
+    if (on) {
+      document.querySelectorAll('.photo-section-free .photo-card').forEach(attachEditable);
+      document.querySelectorAll('.photo-section-free').forEach(attachGrid);
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('keydown', onKey);
+    } else {
+      select(null);
+      document.querySelectorAll('.photo-section-free .photo-card').forEach(detachEditable);
+      document.querySelectorAll('.grid-overlay').forEach(g => g.remove());
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('keydown', onKey);
+    }
+  }
+
+  // ── Card setup ──────────────────────────────────────────────────────────────
+  function attachEditable(card) {
+    card.setAttribute('data-editable', '1');
+    ['nw','n','ne','e','se','s','sw','w'].forEach(p => {
+      const h = document.createElement('div');
+      h.className = 'resize-handle'; h.dataset.pos = p;
+      h.addEventListener('mousedown', onHandleMD);
+      card.appendChild(h);
+    });
+    card.addEventListener('mousedown', onCardMD);
+    card.querySelector('img').addEventListener('click', eatClick, true);
+  }
+
+  function detachEditable(card) {
+    card.removeAttribute('data-editable');
+    card.querySelectorAll('.resize-handle').forEach(h => h.remove());
+    card.removeEventListener('mousedown', onCardMD);
+    const img = card.querySelector('img');
+    if (img) img.removeEventListener('click', eatClick, true);
+  }
+
+  function eatClick(e) { if (edActive) e.stopPropagation(); }
+
+  // ── Selection ───────────────────────────────────────────────────────────────
+  function select(card) {
+    if (selCard) selCard.classList.remove('ed-selected');
+    selCard = card;
+    if (card) { card.classList.add('ed-selected'); updateVal(); }
+    else valDisp.textContent = 'click a photo to select';
+  }
+
+  function updateVal() {
+    if (!selCard) return;
+    const c = selCard.closest('.photo-section-free');
+    const x = pct(selCard.offsetLeft, c.clientWidth);
+    const y = pct(selCard.offsetTop,  c.clientHeight);
+    const w = pct(selCard.offsetWidth, c.clientWidth);
+    valDisp.textContent = `x: ${x}  y: ${y}  w: ${w}`;
+  }
+
+  // ── Drag / resize ───────────────────────────────────────────────────────────
+  function onCardMD(e) {
+    if (e.target.classList.contains('resize-handle')) return;
+    select(e.currentTarget);
+    const c = e.currentTarget.closest('.photo-section-free');
+    drag = { type:'move', card:e.currentTarget, con:c,
+             mx:e.clientX, my:e.clientY,
+             l0:e.currentTarget.offsetLeft, t0:e.currentTarget.offsetTop };
+    e.preventDefault();
+  }
+
+  function onHandleMD(e) {
+    e.stopPropagation();
+    const card = e.currentTarget.closest('.photo-card');
+    select(card);
+    const c = card.closest('.photo-section-free');
+    drag = { type:'resize', card, con:c, pos:e.currentTarget.dataset.pos,
+             mx:e.clientX, my:e.clientY,
+             l0:card.offsetLeft, t0:card.offsetTop,
+             w0:card.offsetWidth, h0:card.offsetHeight };
+    e.preventDefault();
+  }
+
+  function onMove(e) {
+    if (!drag) return;
+    const { card, con } = drag;
+    const cw = con.clientWidth, ch = con.clientHeight;
+    const dx = e.clientX - drag.mx, dy = e.clientY - drag.my;
+
+    let l = drag.l0, t = drag.t0, w = drag.w0 || card.offsetWidth;
+
+    if (drag.type === 'move') {
+      l = drag.l0 + dx;
+      t = drag.t0 + dy;
+    } else {
+      const p = drag.pos;
+      if (p.includes('e')) w = drag.w0 + dx;
+      if (p.includes('w')) { l = drag.l0 + dx; w = drag.w0 - dx; }
+      if (p.includes('n')) t = drag.t0 + dy;
+      // south doesn't change height (auto aspect ratio)
+    }
+    w = Math.max(w, 30);
+
+    if (snapOn) {
+      const s = snap(card, con, l, t, w, drag.type, drag.pos || '');
+      l = s.l; t = s.t; w = s.w;
+      renderGuides(s.guides, con);
+    } else {
+      clearGuides(con);
+    }
+
+    card.style.left  = pct(l, cw);
+    card.style.top   = pct(t, ch);
+    card.style.width = pct(w, cw);
+    updateVal();
+  }
+
+  function onUp() {
+    if (drag) { clearGuides(drag.con); drag = null; }
+  }
+
+  function onKey(e) {
+    if (!selCard) return;
+    const c = selCard.closest('.photo-section-free');
+    const step = e.shiftKey ? 10 : 1;
+    const cw = c.clientWidth, ch = c.clientHeight;
+    if (e.key === 'ArrowLeft')  { selCard.style.left = pct(selCard.offsetLeft - step, cw); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { selCard.style.left = pct(selCard.offsetLeft + step, cw); e.preventDefault(); }
+    if (e.key === 'ArrowUp')    { selCard.style.top  = pct(selCard.offsetTop  - step, ch); e.preventDefault(); }
+    if (e.key === 'ArrowDown')  { selCard.style.top  = pct(selCard.offsetTop  + step, ch); e.preventDefault(); }
+    updateVal();
+  }
+
+  // ── Snapping ────────────────────────────────────────────────────────────────
+  function snap(card, con, l, t, w, type, pos) {
+    const cw = con.clientWidth, ch = con.clientHeight;
+    const h  = card.offsetHeight * (w / card.offsetWidth); // estimated new height
+    const r  = l + w, cx = l + w/2, b = t + h, cy = t + h/2;
+
+    const xT = [], yT = []; // snap targets
+
+    // Container edges + center
+    xT.push(0, cw, cw/2);
+    yT.push(0, ch, ch/2);
+
+    // Grid lines
+    for (let i = 1; i < GRID_COLS; i++) { xT.push(cw*i/GRID_COLS); yT.push(ch*i/GRID_COLS); }
+
+    // Other photos
+    con.querySelectorAll('.photo-card').forEach(o => {
+      if (o === card) return;
+      xT.push(o.offsetLeft, o.offsetLeft + o.offsetWidth, o.offsetLeft + o.offsetWidth/2);
+      yT.push(o.offsetTop,  o.offsetTop  + o.offsetHeight, o.offsetTop  + o.offsetHeight/2);
+    });
+
+    const guides = [];
+    let sl = l, st = t, sw = w;
+
+    const snapX = (val, offset) => {
+      for (const v of xT) {
+        if (Math.abs(val - v) <= SNAP_PX) { guides.push({axis:'v', px:v}); return v - offset; }
+      }
+      return null;
+    };
+    const snapY = (val, offset) => {
+      for (const v of yT) {
+        if (Math.abs(val - v) <= SNAP_PX) { guides.push({axis:'h', px:v}); return v - offset; }
+      }
+      return null;
+    };
+
+    if (type === 'move') {
+      sl = snapX(l, 0) ?? snapX(r, w) ?? snapX(cx, w/2) ?? l;
+      st = snapY(t, 0) ?? snapY(b, h) ?? snapY(cy, h/2) ?? t;
+    } else {
+      if (pos.includes('e')) { const s = snapX(r, 0); if (s !== null) sw = l + w - sl + (s - (l + w - sl) + w); /* simpler: */ sw = snapX(r, l) !== null ? (xT.find(v => Math.abs(r-v)<=SNAP_PX) - l) : w; }
+      if (pos.includes('w')) { const nx = snapX(l, 0) ?? l; sw = drag.l0 + drag.w0 - nx; sl = nx; }
+      if (pos.includes('n')) { st = snapY(t, 0) ?? t; }
+    }
+
+    // cleaner e-snap
+    if (type === 'resize' && pos.includes('e')) {
+      for (const v of xT) { if (Math.abs(r - v) <= SNAP_PX) { sw = v - l; guides.push({axis:'v', px:v}); break; } }
+    }
+
+    return { l:sl, t:st, w:Math.max(sw,30), guides };
+  }
+
+  // ── Guides ──────────────────────────────────────────────────────────────────
+  function renderGuides(guides, con) {
+    clearGuides(con);
+    guides.forEach(g => {
+      const el = document.createElement('div');
+      el.className = 'snap-guide ' + (g.axis === 'h' ? 'h' : 'v');
+      el.dataset.guide = '1';
+      if (g.axis === 'h') el.style.top  = pct(g.px, con.clientHeight);
+      else                el.style.left = pct(g.px, con.clientWidth);
+      con.appendChild(el);
+    });
+  }
+
+  function clearGuides(con) {
+    (con || document).querySelectorAll('[data-guide]').forEach(g => g.remove());
+  }
+
+  // ── Grid overlay ────────────────────────────────────────────────────────────
+  function attachGrid(section) {
+    const g = document.createElement('div');
+    g.className = 'grid-overlay'; g.dataset.gridOverlay = '1';
+    let html = '';
+    for (let i = 1; i < GRID_COLS; i++) {
+      const p = (i/GRID_COLS*100)+'%';
+      html += `<div style="position:absolute;left:${p};top:0;bottom:0;width:1px;background:rgba(66,133,244,0.18)"></div>`;
+      html += `<div style="position:absolute;top:${p};left:0;right:0;height:1px;background:rgba(66,133,244,0.18)"></div>`;
+    }
+    g.innerHTML = html;
+    section.appendChild(g);
+    g.style.display = gridOn ? 'block' : 'none';
+  }
+
+  function refreshGrids() {
+    document.querySelectorAll('.grid-overlay').forEach(g => g.style.display = gridOn ? 'block' : 'none');
+  }
+
+  // ── Centering ───────────────────────────────────────────────────────────────
+  function centerH() {
+    if (!selCard) return;
+    const c = selCard.closest('.photo-section-free');
+    selCard.style.left = pct((c.clientWidth - selCard.offsetWidth) / 2, c.clientWidth);
+    updateVal();
+  }
+
+  function centerV() {
+    if (!selCard) return;
+    const c = selCard.closest('.photo-section-free');
+    selCard.style.top = pct((c.clientHeight - selCard.offsetHeight) / 2, c.clientHeight);
+    updateVal();
+  }
+
+  // ── Copy values ─────────────────────────────────────────────────────────────
+  function showCopyModal() {
+    const lines = [];
+    document.querySelectorAll('.photo-section-free').forEach(sec => {
+      const cw = sec.clientWidth, ch = sec.clientHeight;
+      sec.querySelectorAll('.photo-card[data-editable]').forEach(card => {
+        const file = card.querySelector('img').src.split('/photos/')[1] || '?';
+        const x = pct(card.offsetLeft,  cw);
+        const y = pct(card.offsetTop,   ch);
+        const w = pct(card.offsetWidth, cw);
+        lines.push(`  x: "${x}", y: "${y}", width: "${w}",  // ${file}`);
+      });
+    });
+    copyTA.value = lines.join('\n');
+    copyModal.classList.add('open');
+  }
+
+  // ── Util ────────────────────────────────────────────────────────────────────
+  function pct(px, total) { return (px / total * 100).toFixed(1) + '%'; }
   </script>
 
 </body>
