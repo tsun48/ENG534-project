@@ -9,14 +9,12 @@
     body { background: #ffffff; color: #000000; font-family: sans-serif; overflow-y: scroll; }
 
     .topbar {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
+      position: relative;
       padding: 1rem 2rem 0;
     }
 
-    header { display: flex; flex-direction: column; align-items: flex-end; align-self: flex-end; margin-left: auto; }
-    header h1 { font-size: 2.5rem; letter-spacing: 0.1em; margin: 0; margin-right: -0.1em; }
+    header { position: absolute; top: 1rem; right: 2rem; text-align: right; }
+    header h1 { font-size: 2.5rem; letter-spacing: 0.1em; margin: 0; }
     header p  { color: #aaa; margin: 0.5rem 0 0 0; }
 
     .tabs {
@@ -241,12 +239,7 @@
             lb.classList.add('open');
           });
 
-          const caption = document.createElement('div');
-          caption.className = 'photo-caption';
-          caption.textContent = photo.caption || 'caption';
-
           card.appendChild(img);
-          card.appendChild(caption);
           gallery.appendChild(card);
         });
     }
