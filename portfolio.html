@@ -253,8 +253,8 @@
     // Free-placement rows: set sectionHeight on first photo of a row (% of container width = container height).
     //   Each photo then needs x (left %), y (top % of section height), width.
     const photoOrder = [
-      { file: "collection-1/ai_1-01.JPG",  position: 1,  category: "collection1", row: 1, x: "0.0%", y: "40.0%", width: "47.7%", sectionHeight: "65%" },
-      { file: "collection-1/ai_1-02.JPG",  position: 2,  category: "collection1", row: 1, x: "52.3%", y: "12.5%", width: "47.7%" },
+      { file: "collection-1/ai_1-01.JPG",  position: 1,  category: "collection1", row: 1, x: "0.0%", y: "41.5%", width: "47.7%", sectionHeight: "65%" },
+      { file: "collection-1/ai_1-02.JPG",  position: 2,  category: "collection1", row: 1, x: "52.3%", y: "14.0%", width: "47.7%" },
       { file: "collection-1/ai_1-03.JPG",  position: 3,  category: "collection1", row: 2, width: "66%", center: true },
       { file: "collection-1/ai_1-04.JPG",  position: 4,  category: "collection1", row: 3, width: "66%", center: true },
       { file: "collection-1/ai_1-06.JPG",  position: 5,  category: "collection1", row: 4, width: "56%" },
@@ -436,6 +436,9 @@
     editBtn.classList.toggle('active', on);
     toolbar.classList.toggle('visible', on);
     if (on) {
+      // Convert flex rows to free-placement so they're editable too
+      document.querySelectorAll('.grid > .photo-row').forEach(convertRowToFree);
+      // Attach to all free sections (original + converted)
       document.querySelectorAll('.photo-section-free .photo-card').forEach(attachEditable);
       document.querySelectorAll('.photo-section-free').forEach(attachGrid);
       document.addEventListener('mousemove', onMove);
@@ -449,6 +452,28 @@
       document.removeEventListener('mouseup', onUp);
       document.removeEventListener('keydown', onKey);
     }
+  }
+
+  function convertRowToFree(row) {
+    const rowRect = row.getBoundingClientRect();
+    const rowH = row.offsetHeight;
+    const rowW = row.offsetWidth;
+    // Record each card's position relative to the row before changing layout
+    const cards = Array.from(row.querySelectorAll('.photo-card'));
+    const positions = cards.map(card => {
+      const r = card.getBoundingClientRect();
+      return { left: r.left - rowRect.left, top: r.top - rowRect.top, width: card.offsetWidth };
+    });
+    // Convert to free-placement section
+    row.classList.replace('photo-row', 'photo-section-free');
+    row.style.height = rowH + 'px';
+    row.dataset.converted = '1';
+    cards.forEach((card, i) => {
+      const pos = positions[i];
+      card.style.width = pct(pos.width, rowW);
+      card.style.left  = pct(pos.left,  rowW);
+      card.style.top   = pct(pos.top,   rowH);
+    });
   }
 
   // ── Card setup ──────────────────────────────────────────────────────────────
@@ -675,12 +700,13 @@
     const lines = [];
     document.querySelectorAll('.photo-section-free').forEach(sec => {
       const cw = sec.clientWidth, ch = sec.clientHeight;
+      const secHeight = pct(ch, cw); // compute from actual dimensions
+      let firstInSection = true;
       sec.querySelectorAll('.photo-card[data-editable]').forEach(card => {
         const p = card._photo || {};
         const x = pct(card.offsetLeft,  cw);
         const y = pct(card.offsetTop,   ch);
         const w = pct(card.offsetWidth, cw);
-        // Rebuild the full entry, updating only x/y/width
         const parts = [
           `file: "${p.file || ''}"`,
           `position: ${p.position ?? '?'}`,
@@ -690,10 +716,7 @@
           `y: "${y}"`,
           `width: "${w}"`,
         ];
-        if (p.sectionHeight) parts.push(`sectionHeight: "${p.sectionHeight}"`);
-        if (p.stack)         parts.push(`stack: true`);
-        if (p.center)        parts.push(`center: true`);
-        if (p.rowAlign)      parts.push(`rowAlign: "${p.rowAlign}"`);
+        if (firstInSection) { parts.push(`sectionHeight: "${secHeight}"`); firstInSection = false; }
         lines.push(`      { ${parts.join(', ')} },`);
       });
     });
